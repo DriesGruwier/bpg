@@ -495,30 +495,33 @@
   const WHATSAPP_NUMMER = "32494708560";
 
   const CONFIG = {
-    // Taal: 'nl' of 'en'
+    // Standaard taal: 'nl' of 'en'
     defaultTaal: 'nl',
 
-    // Lijn/zone opties (laatste = manuele invoer)
+    // Lijn/zone opties
+    // id = waarde die opgeslagen wordt (altijd NL)
+    // nl = Nederlandse weergave
+    // en = Engelse weergave
     lijnen: [
-      'Doosstapellijn',
-      'Plaatvries',
-      'Kaai',
+      { id: 'Doosstapellijn', nl: 'Doosstapellijn',  en: 'Box stacking line' },
+      { id: 'Plaatvries',     nl: 'Plaatvries',       en: 'Plate freezer'     },
+      { id: 'Kaai',           nl: 'Kaai',             en: 'Quay'              },
     ],
 
-    // Oorsprong opties
+    // Oorsprong opties — zelfde structuur
     oorsprongen: [
-      'Westvlees',
-      'Covameat',
-      'Lovenfosse',
-      'Comeco',
-      'Van Bogaert',
-      'Locks',
+      { id: 'Westvlees',   nl: 'Westvlees',   en: 'Westvlees'   },
+      { id: 'Covameat',    nl: 'Covameat',    en: 'Covameat'    },
+      { id: 'Lovenfosse',  nl: 'Lovenfosse',  en: 'Lovenfosse'  },
+      { id: 'Comeco',      nl: 'Comeco',      en: 'Comeco'      },
+      { id: 'Van Bogaert', nl: 'Van Bogaert', en: 'Van Bogaert' },
+      { id: 'Locks',       nl: 'Locks',       en: 'Locks'       },
     ],
 
-    // Type probleem opties (vaste knoppen, max 4)
+    // Type probleem opties
     types: [
-      'Open dozen',
-      'Label',
+      { id: 'Open dozen', nl: 'Open dozen', en: 'Open boxes' },
+      { id: 'Label',      nl: 'Label',      en: 'Label'      },
     ],
   };
 
@@ -621,11 +624,13 @@
     if (saved.operator) document.getElementById('operator').value = saved.operator;
     if (saved.lijn) {
       const sel = document.getElementById('lijnSelect');
-      const opt = Array.from(sel.options).find(o => o.value === saved.lijn);
-      if (opt) {
-        sel.value = saved.lijn;
-        document.getElementById('lijn').value = saved.lijn;
-      } else if (saved.lijn) {
+      // Zoek op id (NL waarde)
+      const optie = CONFIG.lijnen.find(l => l.id === saved.lijn);
+      if (optie) {
+        sel.value = optie.id;
+        document.getElementById('lijn').value = optie.id;
+      } else {
+        // Manuele invoer
         sel.value = '__manueel__';
         document.getElementById('lijn').style.display = 'block';
         document.getElementById('lijn').value = saved.lijn;
@@ -774,9 +779,10 @@
   function slaOpMelding() {
     const operator = document.getElementById('operator').value.trim();
     const lijnSel = document.getElementById('lijnSelect').value;
-    const lijn = lijnSel === '__manueel__' || lijnSel === '' 
-      ? document.getElementById('lijn').value.trim() 
-      : lijnSel;
+    // Altijd NL id opslaan, tenzij manuele invoer
+    const lijn = (lijnSel === '__manueel__' || lijnSel === '')
+      ? document.getElementById('lijn').value.trim()
+      : lijnSel; // lijnSel is al het id (NL waarde)
     const oorsprong = document.getElementById('oorsprong').value;
     const cnt = document.getElementById('cnt').value.trim();
     const type = selectedTypeValue;
@@ -1099,8 +1105,8 @@
     // Header
     document.querySelector('header h1').innerHTML = `<span>${t.subtitel}</span>${t.titel}`;
     // Tabs
-    document.querySelector('[onclick="switchTab('nieuw')"]').textContent = t.tabNieuw;
-    document.querySelector('[onclick="switchTab('meldingen')"]').textContent = t.tabMeldingen;
+    document.querySelectorAll('.tab')[0].innerHTML = t.tabNieuw;
+    document.querySelectorAll('.tab')[1].innerHTML = t.tabMeldingen;
     // Labels
     const lbls = {
       'lblOperator': t.operator, 'lblLijn': t.lijn,
@@ -1142,7 +1148,7 @@
     const sel = document.getElementById('lijnSelect');
     const huidige = sel.value;
     sel.innerHTML = `<option value="">-- ${t.lijn} --</option>` +
-      CONFIG.lijnen.map(l => `<option value="${l}">${l}</option>`).join('') +
+      CONFIG.lijnen.map(l => `<option value="${l.id}">${l[huidigeTaal] || l.nl}</option>`).join('') +
       `<option value="__manueel__">${t.lijnManueel}</option>`;
     if (huidige) sel.value = huidige;
   }
@@ -1151,14 +1157,14 @@
     const sel = document.getElementById('oorsprong');
     const huidige = sel.value;
     sel.innerHTML = `<option value="">-- ${TEKST[huidigeTaal].oorsprong} --</option>` +
-      CONFIG.oorsprongen.map(o => `<option value="${o}">${o}</option>`).join('');
+      CONFIG.oorsprongen.map(o => `<option value="${o.id}">${o[huidigeTaal] || o.nl}</option>`).join('');
     if (huidige) sel.value = huidige;
   }
 
   function vulTypeGrid() {
     const grid = document.getElementById('typeGrid');
     grid.innerHTML = CONFIG.types.map(t =>
-      `<button class="type-btn ${selectedTypeValue === t ? 'active' : ''}" data-type="${t}" onclick="selectType(this)">${t}</button>`
+      `<button class="type-btn ${selectedTypeValue === t.id ? 'active' : ''}" data-type="${t.id}" onclick="selectType(this)">${t[huidigeTaal] || t.nl}</button>`
     ).join('');
   }
 
