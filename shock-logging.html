@@ -403,6 +403,24 @@
     <input type="text" id="lijn" value="Robot dozenlijn" autocomplete="off">
   </div>
 
+  <div class="field">
+    <label>Oorsprong</label>
+    <select id="oorsprong" style="width:100%;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:'Barlow',sans-serif;font-size:16px;padding:13px 14px;outline:none;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:38px;">
+      <option value="">-- Kies oorsprong --</option>
+      <option value="Westvlees">Westvlees</option>
+      <option value="Covameat">Covameat</option>
+      <option value="Lovenfosse">Lovenfosse</option>
+      <option value="Comeco">Comeco</option>
+      <option value="Van Bogaert">Van Bogaert</option>
+      <option value="Locks">Locks</option>
+    </select>
+  </div>
+
+  <div class="field">
+    <label>CNT Nummer <span style="color:var(--text-muted);font-size:10px;font-weight:400;text-transform:none;letter-spacing:0">(optioneel)</span></label>
+    <input type="text" id="cnt" placeholder="bv. CNT-12345" autocomplete="off">
+  </div>
+
   <div class="section-label">Probleem</div>
 
   <div class="field">
@@ -641,20 +659,21 @@
   function slaOpMelding() {
     const operator = document.getElementById('operator').value.trim();
     const lijn = document.getElementById('lijn').value.trim();
+    const oorsprong = document.getElementById('oorsprong').value;
+    const cnt = document.getElementById('cnt').value.trim();
     const type = selectedTypeValue;
     const omschrijving = document.getElementById('omschrijving').value.trim();
 
-    showToast('Debug: op=' + (operator||'LEEG') + ' type=' + (type||'LEEG') + ' foto=' + (fotoBase64 ? 'ja' : 'nee'));
-
     if (!operator) { showToast('Vul je naam in', true); return; }
     if (!lijn) { showToast('Vul de lijn/zone in', true); return; }
+    if (!oorsprong) { showToast('Kies een oorsprong', true); return; }
     if (!type) { showToast('Kies een type probleem', true); return; }
     if (!omschrijving) { showToast('Vul een omschrijving in', true); return; }
 
     const melding = {
       id: Date.now().toString(),
       timestamp: new Date().toISOString(),
-      operator, lijn, type, omschrijving,
+      operator, lijn, oorsprong, cnt: cnt || null, type, omschrijving,
       foto: fotoBase64 || null
     };
 
@@ -669,6 +688,8 @@
 
   function resetForm() {
     document.getElementById('omschrijving').value = '';
+    document.getElementById('oorsprong').value = '';
+    document.getElementById('cnt').value = '';
     fotoBase64 = null;
     const area = document.getElementById('fotoArea');
     area.classList.remove('has-photo');
@@ -723,7 +744,7 @@
             <button class="melding-delete" onclick="verwijderMelding('${m.id}')">×</button>
           </div>
           <div class="melding-type">${m.type}</div>
-          <div class="melding-meta">${m.operator} — ${m.lijn}</div>
+          <div class="melding-meta">${m.operator} — ${m.lijn} — ${m.oorsprong || ''}${m.cnt ? ' — CNT: ' + m.cnt : ''}</div>
           <div class="melding-omschrijving">${m.omschrijving}</div>
           ${m.foto ? `<img class="melding-foto" src="${m.foto}" onclick="openModal('${m.id}')" alt="Foto">` : ''}
         </div>`;
@@ -795,6 +816,8 @@
       txtInhoud += `TIMESTAMP: ${m.timestamp}\n`;
       txtInhoud += `OPERATOR: ${m.operator}\n`;
       txtInhoud += `LIJN: ${m.lijn}\n`;
+      txtInhoud += `OORSPRONG: ${m.oorsprong || ''}\n`;
+      txtInhoud += `CNT: ${m.cnt || ''}\n`;
       txtInhoud += `TYPE: ${m.type}\n`;
       txtInhoud += `OMSCHRIJVING: ${m.omschrijving}\n`;
       txtInhoud += `FOTO: ${m.foto || 'geen'}\n`;
@@ -809,6 +832,7 @@
       try {
         await navigator.share({ title: 'Robotlijn meldingen', text: tekst, files: [file] });
         showToast('Gedeeld!');
+        verwijderNaVersturen();
         return;
       } catch (err) {
         if (err.name === 'AbortError') return;
@@ -820,6 +844,14 @@
     a.href = url; a.download = txtBestandsnaam; a.click();
     URL.revokeObjectURL(url);
     showToast('Bestand gedownload');
+    verwijderNaVersturen();
+  }
+
+  // --- Verwijder na versturen ---
+  function verwijderNaVersturen() {
+    localStorage.removeItem('rl_meldingen');
+    updateBadge();
+    renderMeldingen();
   }
 
   // --- Verwijder alles ---
