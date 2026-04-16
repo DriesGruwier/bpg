@@ -2,481 +2,890 @@
 <html lang="nl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Robotlijn — Verwerkingstool</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a0a">
+<title>Robotlijn Melding</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root{--bg:#f4f4f6;--surface:#fff;--border:#e0e0e6;--accent:#f5a623;--accent-dark:#c47d00;--text:#1a1a1e;--muted:#888;--success:#2ecc71;--error:#e74c3c;--radius:10px}
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh}
-  header{background:#1a1a1e;border-bottom:3px solid var(--accent);padding:18px 32px;display:flex;align-items:center;gap:16px}
-  .hi{width:42px;height:42px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center}
-  .hi svg{width:24px;height:24px}
-  header h1{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:1px}
-  header h1 span{display:block;font-size:12px;font-weight:600;color:var(--accent);letter-spacing:2px}
-  .tabs{display:flex;background:#1a1a1e;border-bottom:1px solid #333;padding:0 32px}
-  .tab{padding:14px 20px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#888;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}
-  .tab.active{color:var(--accent);border-bottom-color:var(--accent)}
-  .tc{display:none}.tc.active{display:block}
-  .main{max-width:1400px;margin:0 auto;padding:28px 24px}
+  :root {
+    --bg: #0e0e10;
+    --surface: #1a1a1e;
+    --surface2: #242428;
+    --border: #2e2e34;
+    --accent: #f5a623;
+    --text: #f0f0f0;
+    --text-muted: #888;
+    --success: #2ecc71;
+    --error: #e74c3c;
+    --whatsapp: #25D366;
+    --radius: 10px;
+  }
 
-  /* SERVER STATUS */
-  .srv{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 18px;margin-bottom:20px;font-size:13px}
-  .dot{width:10px;height:10px;border-radius:50%;background:var(--error);flex-shrink:0;transition:background .3s}
-  .dot.ok{background:var(--success)}
-  .dot.checking{background:orange}
-  #srvtxt{color:var(--muted);flex:1}
-  .btn-retry{background:none;border:1px solid var(--border);border-radius:6px;padding:4px 12px;font-size:12px;cursor:pointer;color:var(--muted)}
-  .btn-retry:hover{border-color:var(--accent);color:var(--text)}
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
-  /* DROP ZONE */
-  .drop-zone{background:var(--surface);border:2px dashed var(--border);border-radius:16px;padding:50px 40px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:24px}
-  .drop-zone:hover,.drop-zone.dov{border-color:var(--accent);background:rgba(245,166,35,.04)}
-  .drop-zone svg{width:48px;height:48px;color:var(--muted);margin-bottom:12px;opacity:.4}
-  .drop-zone h2{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px}
-  .drop-zone p{font-size:13px;color:var(--muted)}
-  .browse-btn{display:inline-block;margin-top:14px;background:var(--accent);color:#000;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;letter-spacing:1px;text-transform:uppercase;padding:10px 24px;border-radius:6px;cursor:pointer;border:none}
-  #fi{display:none}
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Barlow', sans-serif;
+    min-height: 100vh;
+    padding-bottom: 60px;
+  }
 
-  /* STATS */
-  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-bottom:24px}
-  .sc{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;border-left:4px solid var(--accent)}
-  .sv{font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:800;line-height:1;margin-bottom:4px}
-  .sl{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.8px}
+  header {
+    background: var(--surface);
+    border-bottom: 2px solid var(--accent);
+    padding: 16px 20px 14px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
 
-  /* FILTERS */
-  .filters{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:20px;display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
-  .fg{display:flex;flex-direction:column;gap:5px}
-  .fg label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px}
-  .fi2,.fs{background:var(--bg);border:1.5px solid var(--border);border-radius:6px;padding:8px 12px;font-family:'Barlow',sans-serif;font-size:14px;color:var(--text);outline:none}
-  .fi2:focus,.fs:focus{border-color:var(--accent)}
-  .fi2{min-width:180px}.fs{min-width:140px;-webkit-appearance:none;appearance:none}
+  .header-icon {
+    width: 38px; height: 38px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .header-icon svg { width: 22px; height: 22px; }
 
-  .toolbar{display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
-  .btn{border:none;border-radius:var(--radius);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:9px 18px;cursor:pointer;transition:all .15s}
-  .bp{background:var(--accent);color:#000}.bp:hover{background:#e09400}
-  .bd{background:#1a1a1e;color:#fff}.bd:hover{background:#333}
-  .bo{background:none;border:1.5px solid var(--border);color:var(--muted)}.bo:hover{border-color:var(--accent);color:var(--text)}
-  .btn:disabled{opacity:.4;cursor:not-allowed}
-  .si{font-size:13px;color:var(--muted);margin-left:auto}
-  .si strong{color:var(--accent)}
+  header h1 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 22px; font-weight: 800;
+    letter-spacing: 0.5px; line-height: 1.1;
+    text-transform: uppercase; flex: 1;
+  }
+  header h1 span {
+    display: block; font-size: 11px; font-weight: 600;
+    color: var(--accent); letter-spacing: 2px; text-transform: uppercase;
+  }
 
-  /* TABEL */
-  .tw{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
-  table{width:100%;border-collapse:collapse}
-  thead{background:#1a1a1e}
-  thead th{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);padding:12px 14px;text-align:left;white-space:nowrap}
-  thead th:first-child{width:40px;text-align:center}
-  tbody tr{border-bottom:1px solid var(--border);transition:background .1s;cursor:pointer}
-  tbody tr:last-child{border-bottom:none}
-  tbody tr:hover{background:rgba(245,166,35,.04)}
-  tbody tr.sel{background:rgba(245,166,35,.08)}
-  td{padding:10px 14px;font-size:14px;vertical-align:middle}
-  .tb{display:inline-block;background:rgba(245,166,35,.12);border:1px solid rgba(245,166,35,.3);border-radius:20px;padding:2px 10px;font-size:12px;font-weight:700;color:var(--accent-dark);white-space:nowrap}
-  .ob{display:inline-block;background:#f0f0f4;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap}
-  .foto-ico{font-size:18px;cursor:pointer}
-  input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--accent)}
-  .ls{text-align:center;padding:60px 20px;color:var(--muted)}
-  .ri{font-size:12px;color:var(--muted);margin-top:10px;text-align:right}
+  .badge-count {
+    background: var(--error);
+    color: #fff;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px; font-weight: 800;
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 70px;
+    z-index: 99;
+  }
+
+  .tab {
+    flex: 1;
+    padding: 12px;
+    text-align: center;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px; font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+  }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .form-wrapper {
+    padding: 20px 16px;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .section-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 2.5px; text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 10px; margin-top: 24px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-label:first-child { margin-top: 0; }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  .field { margin-bottom: 14px; }
+
+  label {
+    display: block; font-size: 12px; font-weight: 600;
+    color: var(--text-muted); margin-bottom: 6px;
+    text-transform: uppercase; letter-spacing: 0.8px;
+  }
+
+  input[type="text"], textarea {
+    width: 100%;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: 'Barlow', sans-serif;
+    font-size: 16px; padding: 13px 14px;
+    outline: none; transition: border-color 0.2s;
+    -webkit-appearance: none; appearance: none;
+  }
+  input[type="text"]:focus, textarea:focus { border-color: var(--accent); }
+  textarea { resize: none; min-height: 100px; line-height: 1.5; }
+
+  .persistent-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: rgba(245,166,35,0.12);
+    border: 1px solid rgba(245,166,35,0.3);
+    border-radius: 20px; padding: 2px 8px;
+    font-size: 10px; color: var(--accent); font-weight: 600;
+    letter-spacing: 0.5px; margin-left: 6px; vertical-align: middle;
+  }
+
+  .type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+
+  .type-btn {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text-muted);
+    font-family: 'Barlow', sans-serif;
+    font-size: 14px; font-weight: 600;
+    padding: 12px 10px; cursor: pointer;
+    transition: all 0.15s; text-align: center;
+  }
+  .type-btn.active { background: rgba(245,166,35,0.1); border-color: var(--accent); color: var(--accent); }
+  .type-btn:active { transform: scale(0.97); }
+
+  .custom-type-wrapper { display: flex; gap: 8px; align-items: center; }
+  .custom-type-wrapper input { flex: 1; }
+
+  .add-custom-btn {
+    background: var(--surface2); border: 1.5px solid var(--border);
+    border-radius: var(--radius); color: var(--text-muted);
+    font-size: 22px; width: 48px; height: 48px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: all 0.15s;
+  }
+  .add-custom-btn:active { transform: scale(0.95); background: var(--accent); color: #000; }
+
+  .custom-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+
+  .custom-tag {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 20px; padding: 4px 10px 4px 12px;
+    font-size: 13px; display: flex; align-items: center; gap: 6px;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .custom-tag.active { background: rgba(245,166,35,0.1); border-color: var(--accent); color: var(--accent); }
+  .custom-tag .remove { color: var(--text-muted); font-size: 15px; line-height: 1; }
+
+  .foto-area {
+    background: var(--surface); border: 2px dashed var(--border);
+    border-radius: var(--radius); min-height: 160px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 10px; cursor: pointer; transition: border-color 0.2s;
+    position: relative; overflow: hidden;
+  }
+  .foto-area:active { border-color: var(--accent); }
+  .foto-area.has-photo { border-style: solid; border-color: var(--accent); }
+  .foto-area img { width: 100%; height: 200px; object-fit: cover; border-radius: 8px; }
+  .foto-placeholder { display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--text-muted); }
+  .foto-placeholder svg { width: 40px; height: 40px; opacity: 0.4; }
+  .foto-placeholder span { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+  .foto-remove {
+    position: absolute; top: 8px; right: 8px;
+    background: rgba(0,0,0,0.7); border: none; border-radius: 50%;
+    width: 30px; height: 30px; color: #fff; font-size: 18px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+  }
+  #fotoInput { display: none; }
+
+  .save-btn {
+    width: 100%;
+    background: var(--accent); border: none;
+    border-radius: var(--radius); color: #000;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 20px; font-weight: 800;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    padding: 18px; cursor: pointer; margin-top: 28px;
+    transition: all 0.15s;
+  }
+  .save-btn:active { transform: scale(0.98); background: #e09400; }
+
+  /* MELDINGEN TAB */
+  .meldingen-wrapper {
+    padding: 16px;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+  }
+  .empty-state svg { width: 48px; height: 48px; opacity: 0.2; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; }
+
+  .melding-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-bottom: 10px;
+    position: relative;
+  }
+
+  .melding-card-header {
+    display: flex; justify-content: space-between;
+    align-items: center; margin-bottom: 8px;
+  }
+
+  .melding-datum {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px; font-weight: 700;
+    color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;
+  }
+
+  .melding-delete {
+    background: none; border: none;
+    color: var(--text-muted); font-size: 18px;
+    cursor: pointer; padding: 2px 6px;
+    border-radius: 4px; transition: color 0.15s;
+  }
+  .melding-delete:active { color: var(--error); }
+
+  .melding-type {
+    font-size: 15px; font-weight: 700;
+    color: var(--accent); margin-bottom: 4px;
+  }
+  .melding-meta { font-size: 13px; color: var(--text-muted); margin-bottom: 6px; }
+  .melding-omschrijving { font-size: 14px; line-height: 1.4; }
+  .melding-foto {
+    width: 100%; height: 100px;
+    object-fit: cover; border-radius: 6px;
+    margin-top: 10px; cursor: pointer;
+  }
+
+  /* VERSTUUR SECTIE */
+  .verstuur-sectie {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+
+  .verstuur-titel {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px; font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--text-muted); margin-bottom: 12px;
+  }
+
+  .whatsapp-btn {
+    width: 100%;
+    background: var(--whatsapp); border: none;
+    border-radius: var(--radius); color: #fff;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 18px; font-weight: 800;
+    letter-spacing: 1px; text-transform: uppercase;
+    padding: 16px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    transition: all 0.15s; margin-bottom: 10px;
+  }
+  .whatsapp-btn:active { transform: scale(0.98); opacity: 0.9; }
+  .whatsapp-btn svg { width: 22px; height: 22px; }
+
+  .download-btn {
+    width: 100%;
+    background: var(--surface2); border: 1.5px solid var(--border);
+    border-radius: var(--radius); color: var(--text);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 16px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    padding: 14px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: all 0.15s; margin-bottom: 10px;
+  }
+  .download-btn:active { transform: scale(0.98); border-color: var(--accent); }
+
+  .clear-btn {
+    width: 100%;
+    background: none; border: 1px solid var(--error);
+    border-radius: var(--radius); color: var(--error);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    padding: 12px; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .clear-btn:active { background: var(--error); color: #fff; }
 
   /* FOTO MODAL */
-  .fm{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:999;align-items:center;justify-content:center;flex-direction:column;gap:14px}
-  .fm.open{display:flex}
-  .fm img{max-width:90vw;max-height:80vh;border-radius:8px}
-  .fmi{color:#fff;font-size:13px;text-align:center}
-  .fmc{position:absolute;top:20px;right:20px;background:rgba(255,255,255,.2);border:none;color:#fff;font-size:22px;width:40px;height:40px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center}
-  .fdb{background:var(--accent);color:#000;border:none;border-radius:6px;padding:8px 18px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;text-transform:uppercase;cursor:pointer}
+  .foto-modal {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.9);
+    z-index: 999;
+    align-items: center; justify-content: center;
+  }
+  .foto-modal.open { display: flex; }
+  .foto-modal img { max-width: 95vw; max-height: 90vh; border-radius: 8px; }
+  .foto-modal-close {
+    position: absolute; top: 16px; right: 16px;
+    background: rgba(255,255,255,0.2); border: none;
+    color: #fff; font-size: 24px; width: 40px; height: 40px;
+    border-radius: 50%; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
 
-  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:#1a1a1e;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:12px 24px;border-radius:30px;z-index:9999;transition:transform .3s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.3)}
-  .toast.show{transform:translateX(-50%) translateY(0)}
-  .tok{background:var(--success)}.terr{background:var(--error)}
-
-  .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
-  @keyframes spin{to{transform:rotate(360deg)}}
+  .toast {
+    position: fixed; bottom: 30px; left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--success); color: #fff;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 16px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    padding: 14px 24px; border-radius: 30px;
+    z-index: 9999; transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    white-space: nowrap; box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  }
+  .toast.error { background: var(--error); }
+  .toast.show { transform: translateX(-50%) translateY(0); }
 </style>
 </head>
 <body>
+
 <header>
-  <div class="hi"><svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
-  <h1><span>Belgian Pork Group</span>Robotlijn — Verwerkingstool</h1>
+  <div class="header-icon">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+      <line x1="12" y1="9" x2="12" y2="13"/>
+      <line x1="12" y1="17" x2="12.01" y2="17"/>
+    </svg>
+  </div>
+  <h1>
+    <span>Belgian Pork Group</span>
+    Robotlijn Melding
+  </h1>
+  <div class="badge-count" id="badgeCount" style="display:none">0</div>
 </header>
 
 <div class="tabs">
-  <div class="tab active" onclick="switchTab('import')">📥 Importeren</div>
-  <div class="tab" onclick="switchTab('meldingen')">📋 Meldingen</div>
+  <div class="tab active" onclick="switchTab('nieuw')">➕ Nieuw</div>
+  <div class="tab" onclick="switchTab('meldingen')" id="tabMeldingen">📋 Meldingen</div>
 </div>
 
-<!-- TAB IMPORT -->
-<div class="tc active" id="tc-import">
-<div class="main">
-  <div class="srv">
-    <div class="dot checking" id="dot"></div>
-    <span id="srvtxt">Verbinding controleren...</span>
-    <button class="btn-retry" onclick="checkServer()">↺ Opnieuw</button>
+<!-- TAB: NIEUW -->
+<div class="tab-content active" id="tab-nieuw">
+<div class="form-wrapper">
+
+  <div class="section-label">Operator</div>
+
+  <div class="field">
+    <label>Naam <span class="persistent-badge">↺ onthouden</span></label>
+    <input type="text" id="operator" placeholder="Voornaam Achternaam" autocomplete="off">
   </div>
 
-  <div class="drop-zone" id="dz" ondrop="onDrop(event)" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" onclick="document.getElementById('fi').click()">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
-    <h2>Sleep TXT of JSON bestanden hier</h2>
-    <p>Meerdere bestanden tegelijk mogelijk — worden opgeslagen in meldingen.db</p>
-    <button class="browse-btn" onclick="event.stopPropagation();document.getElementById('fi').click()">Bestanden kiezen</button>
+  <div class="field">
+    <label>Lijn / Zone <span class="persistent-badge">↺ onthouden</span></label>
+    <input type="text" id="lijn" value="Robot dozenlijn" autocomplete="off">
   </div>
-  <input type="file" id="fi" accept=".json,.txt" multiple onchange="onFileSelect(event)">
 
-  <div class="stats" id="stats" style="display:none">
-    <div class="sc"><div class="sv" id="stot">0</div><div class="sl">Totaal</div></div>
-    <div class="sc"><div class="sv" id="sop">0</div><div class="sl">Operators</div></div>
-    <div class="sc"><div class="sv" id="sfoto">0</div><div class="sl">Met foto</div></div>
-    <div class="sc"><div class="sv" id="svand">0</div><div class="sl">Vandaag</div></div>
-    <div class="sc"><div class="sv" id="soors">0</div><div class="sl">Oorsprongen</div></div>
+  <div class="field">
+    <label>Oorsprong</label>
+    <select id="oorsprong" style="width:100%;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:'Barlow',sans-serif;font-size:16px;padding:13px 14px;outline:none;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:38px;">
+      <option value="">-- Kies oorsprong --</option>
+      <option value="Westvlees">Westvlees</option>
+      <option value="Covameat">Covameat</option>
+      <option value="Lovenfosse">Lovenfosse</option>
+      <option value="Comeco">Comeco</option>
+      <option value="Van Bogaert">Van Bogaert</option>
+      <option value="Locks">Locks</option>
+    </select>
   </div>
-</div>
-</div>
 
-<!-- TAB MELDINGEN -->
-<div class="tc" id="tc-meldingen">
-<div class="main">
-  <div class="filters">
-    <div class="fg"><label>Zoeken</label><input type="text" class="fi2" id="fzoek" placeholder="Operator, type, omschrijving..." oninput="laadMeldingen()"></div>
-    <div class="fg"><label>Oorsprong</label><select class="fs" id="foors" onchange="laadMeldingen()"><option value="">Alle oorsprongen</option></select></div>
-    <div class="fg"><label>Datum van</label><input type="date" class="fi2" id="fdvan" style="min-width:150px" onchange="laadMeldingen()"></div>
-    <div class="fg"><label>Datum tot</label><input type="date" class="fi2" id="fdtot" style="min-width:150px" onchange="laadMeldingen()"></div>
-    <div class="fg"><label>Type</label>
-      <div style="display:flex;gap:6px;align-items:center">
-        <select class="fs" id="ftype" onchange="document.getElementById('ftypevrij').value='';laadMeldingen()"><option value="">Alle types</option></select>
-        <input type="text" class="fi2" id="ftypevrij" placeholder="Vrij..." style="min-width:100px;width:100px" oninput="document.getElementById('ftype').value='';laadMeldingen()">
+  <div class="field">
+    <label>CNT Nummer <span style="color:var(--text-muted);font-size:10px;font-weight:400;text-transform:none;letter-spacing:0">(optioneel)</span></label>
+    <input type="text" id="cnt" placeholder="bv. CNT-12345" autocomplete="off">
+  </div>
+
+  <div class="section-label">Probleem</div>
+
+  <div class="field">
+    <label>Type probleem <span class="persistent-badge">↺ onthouden</span></label>
+    <div class="type-grid">
+      <button class="type-btn" data-type="Open dozen" onclick="selectType(this)">📦 Open dozen</button>
+      <button class="type-btn" data-type="Label" onclick="selectType(this)">🏷️ Label</button>
+    </div>
+    <div class="custom-type-wrapper">
+      <input type="text" id="customTypeInput" placeholder="Ander type toevoegen...">
+      <button class="add-custom-btn" onclick="addCustomType()">+</button>
+    </div>
+    <div class="custom-tags" id="customTags"></div>
+    <input type="hidden" id="selectedType">
+  </div>
+
+  <div class="field">
+    <label>Omschrijving</label>
+    <textarea id="omschrijving" placeholder="Beschrijf het probleem zo duidelijk mogelijk..."></textarea>
+  </div>
+
+  <div class="section-label">Foto</div>
+
+  <div class="field">
+    <div class="foto-area" id="fotoArea" onclick="document.getElementById('fotoInput').click()">
+      <div class="foto-placeholder">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+          <circle cx="12" cy="13" r="4"/>
+        </svg>
+        <span>Tik om foto te nemen</span>
       </div>
     </div>
-    <button class="btn bo" onclick="resetF()">✕ Reset</button>
+    <input type="file" id="fotoInput" accept="image/*" capture="environment" onchange="handleFoto(event)">
   </div>
-  <div class="toolbar">
-    <button class="btn bp" id="btnPDF" onclick="maakPDF()" disabled>📄 PDF van selectie</button>
-    <button class="btn bd" onclick="exportCSV()">⬇️ Export CSV</button>
-    <button class="btn bo" onclick="selAll()">Alles selecteren</button>
-    <button class="btn bo" onclick="desel()">Deselecteren</button>
-    <span class="si" id="selinfo"><strong>0</strong> geselecteerd</span>
+
+  <button class="save-btn" onclick="slaOpMelding()">
+    Melding Opslaan
+  </button>
+
+</div>
+</div>
+
+<!-- TAB: MELDINGEN -->
+<div class="tab-content" id="tab-meldingen">
+<div class="meldingen-wrapper">
+
+  <div class="verstuur-sectie" id="verstuurSectie" style="display:none">
+    <div class="verstuur-titel">📤 Versturen naar Dries</div>
+
+    <button class="whatsapp-btn" onclick="deelMeldingen()">
+      📤 Delen (WhatsApp / Mail / ...)
+    </button>
+
+    <button class="clear-btn" onclick="verwijderVerstuurde()">
+      🗑️ Verwijder alle meldingen
+    </button>
   </div>
-  <div id="tbl"></div>
+
+  <div id="meldingList"></div>
+
 </div>
 </div>
 
 <!-- FOTO MODAL -->
-<div class="fm" id="fm" onclick="closeModal(event)">
-  <button class="fmc" onclick="closeModal()">×</button>
-  <img id="fmimg" src="" alt="Foto">
-  <div class="fmi" id="fminfo"></div>
-  <button class="fdb" onclick="dlFoto()">⬇️ Download foto</button>
+<div class="foto-modal" id="fotoModal" onclick="sluitModal()">
+  <button class="foto-modal-close">×</button>
+  <img id="fotoModalImg" src="" alt="Foto">
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-const API = 'http://localhost:8765';
-let gefilterd = [], geselecteerd = new Set(), curFoto = null, serverOk = false;
+  // --- Config ---
+  const WHATSAPP_NUMMER = "32494708560";
 
-// --- Server check ---
-async function checkServer() {
-  document.getElementById('dot').className = 'dot checking';
-  document.getElementById('srvtxt').textContent = 'Verbinding controleren...';
-  try {
-    const r = await fetch(API + '/api/stats', { signal: AbortSignal.timeout(3000) });
-    if (r.ok) {
-      const stats = await r.json();
-      serverOk = true;
-      document.getElementById('dot').className = 'dot ok';
-      document.getElementById('srvtxt').textContent = `Server actief — meldingen.db — ${stats.totaal} meldingen opgeslagen`;
-      updateStats(stats);
-      updateFilters(stats);
-    } else throw new Error('HTTP ' + r.status);
-  } catch(e) {
-    serverOk = false;
-    document.getElementById('dot').className = 'dot';
-    document.getElementById('srvtxt').textContent = 'Server niet bereikbaar — start start.bat en probeer opnieuw';
+  // --- State ---
+  let fotoBase64 = null;
+  let selectedTypeValue = null;
+  let customTypes = [];
+
+  // --- Tab switching ---
+  function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('active');
+    document.getElementById(`tab-${tab}`).classList.add('active');
+    if (tab === 'meldingen') renderMeldingen();
   }
-}
 
-function updateStats(s) {
-  document.getElementById('stot').textContent = s.totaal;
-  document.getElementById('sop').textContent = s.operators;
-  document.getElementById('sfoto').textContent = s.metFoto;
-  document.getElementById('svand').textContent = s.vandaag;
-  document.getElementById('soors').textContent = s.oorsprongen;
-  document.getElementById('stats').style.display = s.totaal > 0 ? 'grid' : 'none';
-}
-
-function updateFilters(s) {
-  const fo = document.getElementById('foors');
-  const cv1 = fo.value;
-  fo.innerHTML = '<option value="">Alle oorsprongen</option>' + (s.oorsprongenLijst||[]).map(o=>`<option value="${o}">${o}</option>`).join('');
-  fo.value = cv1;
-  const ft = document.getElementById('ftype');
-  const cv2 = ft.value;
-  ft.innerHTML = '<option value="">Alle types</option>' + (s.typesLijst||[]).map(t=>`<option value="${t}">${t}</option>`).join('');
-  ft.value = cv2;
-}
-
-// --- Import ---
-function onDragOver(e) { e.preventDefault(); document.getElementById('dz').classList.add('dov'); }
-function onDragLeave() { document.getElementById('dz').classList.remove('dov'); }
-function onDrop(e) { e.preventDefault(); document.getElementById('dz').classList.remove('dov'); leesFiles(Array.from(e.dataTransfer.files)); }
-function onFileSelect(e) { leesFiles(Array.from(e.target.files)); }
-
-async function leesFiles(files) {
-  if (!serverOk) { toast('Server niet bereikbaar — start start.bat', 'terr'); return; }
-  let totaal = 0;
-  for (const f of files) {
-    const tekst = await f.text();
-    try {
-      const r = await fetch(API + '/api/import', {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: tekst
-      });
-      const data = await r.json();
-      totaal += data.imported || 0;
-    } catch(e) { toast('Fout bij import: ' + e.message, 'terr'); }
+  // --- Persistent ---
+  function loadPersistent() {
+    const saved = JSON.parse(localStorage.getItem('rl_persistent') || '{}');
+    if (saved.operator) document.getElementById('operator').value = saved.operator;
+    if (saved.lijn) document.getElementById('lijn').value = saved.lijn;
+    if (saved.customTypes) { customTypes = saved.customTypes; renderCustomTags(); }
+    if (saved.selectedType) {
+      setTimeout(() => {
+        document.querySelectorAll('.type-btn').forEach(b => {
+          if (b.dataset.type === saved.selectedType) b.classList.add('active');
+        });
+        const tag = document.querySelector(`.custom-tag[data-type="${CSS.escape(saved.selectedType)}"]`);
+        if (tag) tag.classList.add('active');
+        selectedTypeValue = saved.selectedType;
+        document.getElementById('selectedType').value = saved.selectedType;
+      }, 50);
+    }
+    updateBadge();
   }
-  toast(`${totaal} meldingen geïmporteerd`, 'tok');
-  await checkServer();
-  laadMeldingen();
-  switchTab('meldingen');
-}
 
-// --- Meldingen laden ---
-async function laadMeldingen() {
-  if (!serverOk) return;
-  const params = new URLSearchParams();
-  const z = document.getElementById('fzoek').value.trim();
-  const o = document.getElementById('foors').value;
-  const dv = document.getElementById('fdvan').value;
-  const dt = document.getElementById('fdtot').value;
-  const t = document.getElementById('ftype').value || document.getElementById('ftypevrij').value.trim();
-  if (z) params.set('zoek', z);
-  if (o) params.set('oorsprong', o);
-  if (dv) params.set('datumVan', dv);
-  if (dt) params.set('datumTot', dt);
-  if (t) params.set('type', t);
-
-  try {
-    const r = await fetch(API + '/api/meldingen?' + params.toString());
-    gefilterd = await r.json();
-    renderTbl();
-  } catch(e) { toast('Fout bij laden', 'terr'); }
-}
-
-function resetF() {
-  ['fzoek','fdvan','fdtot'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('foors').value = '';
-  document.getElementById('ftype').value = '';
-  document.getElementById('ftypevrij').value = '';
-  laadMeldingen();
-}
-
-// --- Render tabel ---
-function renderTbl() {
-  const c = document.getElementById('tbl');
-  updSelInfo();
-  if (!gefilterd.length) {
-    c.innerHTML = '<div class="ls"><p style="font-size:36px;margin-bottom:12px">🔍</p><p>Geen meldingen gevonden</p></div>';
-    return;
+  function savePersistent() {
+    localStorage.setItem('rl_persistent', JSON.stringify({
+      operator: document.getElementById('operator').value,
+      lijn: document.getElementById('lijn').value,
+      selectedType: selectedTypeValue,
+      customTypes
+    }));
   }
-  c.innerHTML = `<div class="tw"><table>
-    <thead><tr>
-      <th><input type="checkbox" id="ca" onchange="togAll(this)"></th>
-      <th>Datum & Tijd</th><th>Operator</th><th>Oorsprong</th><th>CNT</th><th>Lijn</th><th>Type</th><th>Omschrijving</th><th>Foto</th>
-    </tr></thead>
-    <tbody>${gefilterd.map(m => {
+
+  document.getElementById('operator').addEventListener('input', savePersistent);
+  document.getElementById('lijn').addEventListener('input', savePersistent);
+
+  // --- Type selectie ---
+  function selectType(btn) {
+    document.querySelectorAll('.type-btn, .custom-tag').forEach(el => el.classList.remove('active'));
+    btn.classList.add('active');
+    selectedTypeValue = btn.dataset.type;
+    document.getElementById('selectedType').value = selectedTypeValue;
+    savePersistent();
+  }
+
+  function addCustomType() {
+    const input = document.getElementById('customTypeInput');
+    const val = input.value.trim();
+    if (!val) return;
+    if (!customTypes.includes(val)) { customTypes.push(val); savePersistent(); renderCustomTags(); }
+    setTimeout(() => {
+      const tag = document.querySelector(`.custom-tag[data-type="${val}"]`);
+      if (tag) selectCustomTag(tag, val);
+    }, 50);
+    input.value = '';
+  }
+
+  document.getElementById('customTypeInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); addCustomType(); }
+  });
+
+  function renderCustomTags() {
+    document.getElementById('customTags').innerHTML = customTypes.map(t => `
+      <div class="custom-tag ${selectedTypeValue === t ? 'active' : ''}" data-type="${t}" onclick="selectCustomTag(this, '${t.replace(/'/g,"\\'")}')">
+        ${t}
+        <span class="remove" onclick="removeCustomType(event, '${t.replace(/'/g,"\\'")}')">×</span>
+      </div>`).join('');
+  }
+
+  function selectCustomTag(el, type) {
+    document.querySelectorAll('.type-btn, .custom-tag').forEach(e => e.classList.remove('active'));
+    el.classList.add('active');
+    selectedTypeValue = type;
+    document.getElementById('selectedType').value = type;
+    savePersistent();
+  }
+
+  function removeCustomType(e, type) {
+    e.stopPropagation();
+    customTypes = customTypes.filter(t => t !== type);
+    if (selectedTypeValue === type) { selectedTypeValue = null; document.getElementById('selectedType').value = ''; }
+    savePersistent();
+    renderCustomTags();
+  }
+
+  // --- Foto ---
+  function handleFoto(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { showToast('Alleen afbeeldingen toegestaan', true); return; }
+    showToast('Foto verwerken...');
+    comprimeerFoto(file, 1200, 0.75).then(base64 => {
+      fotoBase64 = base64;
+      const area = document.getElementById('fotoArea');
+      area.classList.add('has-photo');
+      area.innerHTML = `
+        <img src="${fotoBase64}" alt="Foto">
+        <button class="foto-remove" onclick="removeFoto(event)">×</button>`;
+      showToast('Foto geladen!');
+    }).catch(err => {
+      showToast('Fout foto: ' + err.message, true);
+    });
+  }
+
+  function comprimeerFoto(file, maxBreedte, kwaliteit) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = new Image();
+        img.onload = () => {
+          // Bereken nieuwe afmetingen
+          let breedte = img.width;
+          let hoogte = img.height;
+          if (breedte > maxBreedte) {
+            hoogte = Math.round(hoogte * maxBreedte / breedte);
+            breedte = maxBreedte;
+          }
+          // Teken op canvas
+          const canvas = document.createElement('canvas');
+          canvas.width = breedte;
+          canvas.height = hoogte;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, breedte, hoogte);
+          resolve(canvas.toDataURL('image/jpeg', kwaliteit));
+        };
+        img.onerror = () => reject(new Error('Afbeelding laden mislukt'));
+        img.src = e.target.result;
+      };
+      reader.onerror = () => reject(new Error('Bestand lezen mislukt'));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function removeFoto(e) {
+    e.stopPropagation();
+    fotoBase64 = null;
+    const area = document.getElementById('fotoArea');
+    area.classList.remove('has-photo');
+    area.onclick = () => document.getElementById('fotoInput').click();
+    area.innerHTML = `<div class="foto-placeholder">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+        <circle cx="12" cy="13" r="4"/>
+      </svg>
+      <span>Tik om foto te nemen</span></div>`;
+    document.getElementById('fotoInput').value = '';
+  }
+
+  // --- Opslaan ---
+  function slaOpMelding() {
+    const operator = document.getElementById('operator').value.trim();
+    const lijn = document.getElementById('lijn').value.trim();
+    const oorsprong = document.getElementById('oorsprong').value;
+    const cnt = document.getElementById('cnt').value.trim();
+    const type = selectedTypeValue;
+    const omschrijving = document.getElementById('omschrijving').value.trim();
+
+    if (!operator) { showToast('Vul je naam in', true); return; }
+    if (!lijn) { showToast('Vul de lijn/zone in', true); return; }
+    if (!oorsprong) { showToast('Kies een oorsprong', true); return; }
+    if (!type) { showToast('Kies een type probleem', true); return; }
+    if (!omschrijving) { showToast('Vul een omschrijving in', true); return; }
+
+    const melding = {
+      id: ([1e7]+-1e3+-4e3+-8e3+-1e11+'').replace(/[018]/g,c=>(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16)),
+      timestamp: new Date().toISOString(),
+      operator, lijn, oorsprong, cnt: cnt || null, type, omschrijving,
+      foto: fotoBase64 || null
+    };
+
+    const meldingen = JSON.parse(localStorage.getItem('rl_meldingen') || '[]');
+    meldingen.unshift(melding);
+    localStorage.setItem('rl_meldingen', JSON.stringify(meldingen));
+
+    showToast('✓ Melding opgeslagen!');
+    resetForm();
+    updateBadge();
+  }
+
+  function resetForm() {
+    document.getElementById('omschrijving').value = '';
+    document.getElementById('oorsprong').value = '';
+    document.getElementById('cnt').value = '';
+    fotoBase64 = null;
+    const area = document.getElementById('fotoArea');
+    area.classList.remove('has-photo');
+    area.onclick = () => document.getElementById('fotoInput').click();
+    area.innerHTML = `<div class="foto-placeholder">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+        <circle cx="12" cy="13" r="4"/>
+      </svg>
+      <span>Tik om foto te nemen</span></div>`;
+    document.getElementById('fotoInput').value = '';
+  }
+
+  // --- Badge ---
+  function updateBadge() {
+    const meldingen = JSON.parse(localStorage.getItem('rl_meldingen') || '[]');
+    const badge = document.getElementById('badgeCount');
+    if (meldingen.length > 0) {
+      badge.style.display = 'flex';
+      badge.textContent = meldingen.length;
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+
+  // --- Render meldingen ---
+  function renderMeldingen() {
+    const meldingen = JSON.parse(localStorage.getItem('rl_meldingen') || '[]');
+    const list = document.getElementById('meldingList');
+    const verstuur = document.getElementById('verstuurSectie');
+
+    if (meldingen.length === 0) {
+      verstuur.style.display = 'none';
+      list.innerHTML = `<div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+        </svg>
+        <p>Geen openstaande meldingen</p></div>`;
+      return;
+    }
+
+    verstuur.style.display = 'block';
+
+    list.innerHTML = meldingen.map(m => {
       const d = new Date(m.timestamp);
-      const ds = d.toLocaleDateString('nl-BE',{day:'2-digit',month:'2-digit',year:'numeric'});
-      const ts = d.toLocaleTimeString('nl-BE',{hour:'2-digit',minute:'2-digit'});
-      const s = geselecteerd.has(m.id);
-      return `<tr class="${s?'sel':''}" onclick="togSel('${m.id}',event)">
-        <td style="text-align:center"><input type="checkbox" ${s?'checked':''} onclick="event.stopPropagation()" onchange="togSel('${m.id}',event)"></td>
-        <td style="color:var(--muted);font-size:12px;white-space:nowrap">${ds}<br>${ts}</td>
-        <td><strong>${m.operator||''}</strong></td>
-        <td><span class="ob">${m.oorsprong||'—'}</span></td>
-        <td style="font-size:12px;color:var(--muted)">${m.cnt||'—'}</td>
-        <td style="font-size:13px">${m.lijn||''}</td>
-        <td><span class="tb">${m.type||''}</span></td>
-        <td style="max-width:240px;font-size:13px">${m.omschrijving||''}</td>
-        <td>${m.heeftFoto?`<img src="" data-id="${m.id}" class="ft" onclick="openFoto('${m.id}',event)" alt="Foto" style="width:70px;height:52px;object-fit:cover;border-radius:4px;cursor:pointer" onmouseover="lazyLoadFoto(this)">`:'<span style="color:var(--muted);font-size:12px">—</span>'}</td>
-      </tr>`;
-    }).join('')}</tbody></table></div>
-    <p class="ri">${gefilterd.length} melding(en) gevonden</p>`;
-}
+      const datum = d.toLocaleDateString('nl-BE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      const tijd = d.toLocaleTimeString('nl-BE', { hour: '2-digit', minute: '2-digit' });
+      return `
+        <div class="melding-card">
+          <div class="melding-card-header">
+            <span class="melding-datum">${datum} ${tijd}</span>
+            <button class="melding-delete" onclick="verwijderMelding('${m.id}')">×</button>
+          </div>
+          <div class="melding-type">${m.type}</div>
+          <div class="melding-meta">${m.operator} — ${m.lijn} — ${m.oorsprong || ''}${m.cnt ? ' — CNT: ' + m.cnt : ''}</div>
+          <div class="melding-omschrijving">${m.omschrijving}</div>
+          ${m.foto ? `<img class="melding-foto" src="${m.foto}" onclick="openModal('${m.id}')" alt="Foto">` : ''}
+        </div>`;
+    }).join('');
+  }
 
-// --- Selectie ---
-function togSel(id, e) {
-  if (e?.target?.tagName === 'SPAN' && e.target.classList.contains('foto-ico')) return;
-  geselecteerd.has(id) ? geselecteerd.delete(id) : geselecteerd.add(id);
-  updSelInfo(); renderTbl();
-}
-function togAll(cb) { cb.checked ? gefilterd.forEach(m=>geselecteerd.add(m.id)) : gefilterd.forEach(m=>geselecteerd.delete(m.id)); updSelInfo(); renderTbl(); }
-function selAll() { gefilterd.forEach(m=>geselecteerd.add(m.id)); updSelInfo(); renderTbl(); }
-function desel() { geselecteerd.clear(); updSelInfo(); renderTbl(); }
-function updSelInfo() {
-  const n = geselecteerd.size;
-  document.getElementById('selinfo').innerHTML = `<strong>${n}</strong> geselecteerd`;
-  document.getElementById('btnPDF').disabled = n === 0;
-}
+  function verwijderMelding(id) {
+    let meldingen = JSON.parse(localStorage.getItem('rl_meldingen') || '[]');
+    meldingen = meldingen.filter(m => m.id !== id);
+    localStorage.setItem('rl_meldingen', JSON.stringify(meldingen));
+    updateBadge();
+    renderMeldingen();
+  }
 
-// --- Lazy load thumbnail ---
-const geladen = new Set();
-async function lazyLoadFoto(img) {
-  const id = img.dataset.id;
-  if (geladen.has(id)) return;
-  geladen.add(id);
-  try {
-    const r = await fetch(API + '/api/foto?id=' + encodeURIComponent(id));
-    const data = await r.json();
-    if (data.foto) img.src = data.foto;
-  } catch(e) {}
-}
+  // --- Download JSON ---
+  function downloadJSON() {
+    const meldingen = JSON.parse(localStorage.getItem('rl_meldingen') || '[]');
+    if (meldingen.length === 0) { showToast('Geen meldingen om te exporteren', true); return; }
 
-// --- Foto ---
-async function openFoto(id, e) {
-  e?.stopPropagation();
-  const m = gefilterd.find(x=>x.id===id);
-  if (!m) return;
-  toast('Foto laden...');
-  try {
-    const r = await fetch(API + '/api/foto?id=' + encodeURIComponent(id));
-    const data = await r.json();
-    if (!data.foto) { toast('Geen foto beschikbaar', 'terr'); return; }
-    curFoto = { foto: data.foto, naam: `foto_${m.operator}_${m.timestamp.slice(0,10)}` };
-    document.getElementById('fmimg').src = data.foto;
-    document.getElementById('fminfo').textContent = `${m.operator} — ${m.type} — ${new Date(m.timestamp).toLocaleString('nl-BE')}`;
-    document.getElementById('fm').classList.add('open');
-  } catch(e) { toast('Fout bij laden foto', 'terr'); }
-}
+    const operator = meldingen[0].operator.replace(/\s+/g, '_');
+    const datum = new Date().toISOString().slice(0, 10);
+    const bestandsnaam = `meldingen_${operator}_${datum}_${Date.now()}.json`;
 
-function closeModal(e) {
-  if (!e||e.target===document.getElementById('fm')||e.currentTarget?.classList.contains('fmc'))
-    document.getElementById('fm').classList.remove('open');
-}
-function dlFoto() {
-  if (!curFoto) return;
-  const a = document.createElement('a'); a.href=curFoto.foto; a.download=curFoto.naam+'.jpg'; a.click();
-}
+    const blob = new Blob([JSON.stringify({ meldingen, geexporteerd: new Date().toISOString() }, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = bestandsnaam; a.click();
+    URL.revokeObjectURL(url);
+    showToast('✓ Bestand gedownload!');
+  }
 
-// --- PDF ---
-async function maakPDF() {
-  const sel = gefilterd.filter(m => geselecteerd.has(m.id));
-  if (!sel.length) return;
-  toast('PDF aanmaken...', 'tok');
+  // --- WhatsApp ---
+  async function deelMeldingen() {
+    const meldingen = JSON.parse(localStorage.getItem('rl_meldingen') || '[]');
+    if (meldingen.length === 0) { showToast('Geen meldingen om te versturen', true); return; }
 
-  // Laad foto's voor geselecteerde meldingen
-  const mMetFoto = await Promise.all(sel.map(async m => {
-    if (!m.heeftFoto) return m;
-    try {
-      const r = await fetch(API + '/api/foto?id=' + encodeURIComponent(m.id));
-      const data = await r.json();
-      return { ...m, fotoData: data.foto };
-    } catch(e) { return m; }
-  }));
+    const operator = meldingen[0].operator.replace(/\s+/g, '_');
+    const datum = new Date().toISOString().slice(0, 10);
+    const bestandsnaam = `meldingen_${operator}_${datum}_${Date.now()}.json`;
 
-  const datum = new Date().toLocaleDateString('nl-BE');
-  let html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Robotlijn Meldingen</title>
-  <style>
-    body{font-family:Arial,sans-serif;margin:0;padding:20px;color:#1a1a1e}
-    .hdr{background:#1a1a1e;color:#fff;padding:20px 24px;margin-bottom:24px;border-radius:8px}
-    .hdr h1{font-size:22px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin:0}
-    .hdr p{font-size:12px;color:#f5a623;margin:4px 0 0;letter-spacing:1px;text-transform:uppercase}
-    .meta{font-size:12px;color:#888;margin-bottom:24px}
-    .card{border:1px solid #e0e0e6;border-radius:10px;padding:18px;margin-bottom:16px;break-inside:avoid;page-break-inside:avoid}
-    .ch{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
-    .cn{font-size:28px;font-weight:800;color:#f5a623;margin-right:16px}
-    .cd{font-size:11px;color:#888;text-transform:uppercase;letter-spacing:1px;font-weight:700}
-    .ct{background:rgba(245,166,35,.15);border:1px solid rgba(245,166,35,.4);border-radius:20px;padding:3px 12px;font-size:12px;font-weight:700;color:#c47d00}
-    .cb{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:start}
-    .ci table{width:100%;border-collapse:collapse}
-    .ci td{padding:4px 8px 4px 0;font-size:13px;vertical-align:top}
-    .ci td:first-child{font-weight:700;color:#888;text-transform:uppercase;font-size:11px;letter-spacing:.5px;width:100px;white-space:nowrap}
-    .cf img{width:240px;height:180px;object-fit:cover;border-radius:6px}
-    @media print{body{padding:10px}.card{margin-bottom:12px}}
-  </style></head><body>
-  <div class="hdr"><h1>Robotlijn Meldingen</h1><p>Belgian Pork Group — ${datum} — ${sel.length} melding(en)</p></div>
-  <div class="meta">Gegenereerd op ${new Date().toLocaleString('nl-BE')}</div>`;
+    // Bouw tekst overzicht
+    const opNaam = meldingen[0].operator;
+    const datumNL = new Date().toLocaleDateString('nl-BE');
+    let tekst = `MELDINGEN ROBOTLIJN\n`;
+    tekst += `${opNaam} - ${datumNL}\n`;
+    tekst += `${meldingen.length} melding(en)\n\n`;
+    meldingen.forEach((m, i) => {
+      const d = new Date(m.timestamp);
+      const tijd = d.toLocaleTimeString('nl-BE', { hour: '2-digit', minute: '2-digit' });
+      tekst += `${i + 1}. ${m.type} - ${tijd}\n`;
+      tekst += `${m.omschrijving}\n`;
+      if (m.foto) tekst += `(foto bijgevoegd)\n`;
+      tekst += `\n`;
+    });
 
-  mMetFoto.forEach((m, i) => {
-    const d = new Date(m.timestamp);
-    const ds = d.toLocaleDateString('nl-BE',{day:'2-digit',month:'2-digit',year:'numeric'});
-    const ts = d.toLocaleTimeString('nl-BE',{hour:'2-digit',minute:'2-digit'});
-    html += `<div class="card">
-      <div class="ch">
-        <div style="display:flex;align-items:center">
-          <span class="cn">#${i+1}</span>
-          <div><div class="cd">${ds} ${ts}</div><div style="font-size:15px;font-weight:700;margin-top:2px">${m.operator||''}</div></div>
-        </div>
-        <span class="ct">${m.type||''}</span>
-      </div>
-      <div class="cb">
-        <div class="ci"><table>
-          <tr><td>Oorsprong</td><td>${m.oorsprong||'—'}</td></tr>
-          <tr><td>Lijn</td><td>${m.lijn||'—'}</td></tr>
-          ${m.cnt?`<tr><td>CNT</td><td>${m.cnt}</td></tr>`:''}
-          <tr><td>Omschrijving</td><td><strong>${m.omschrijving||''}</strong></td></tr>
-        </table></div>
-        ${m.fotoData?`<div class="cf"><img src="${m.fotoData}" alt="Foto"></div>`:''}
-      </div>
-    </div>`;
-  });
+    // Bouw TXT inhoud
+    let txtInhoud = `ROBOTLIJN MELDINGEN\n`;
+    txtInhoud += `GEEXPORTEERD: ${new Date().toISOString()}\n`;
+    txtInhoud += `OPERATOR: ${opNaam}\n`;
+    txtInhoud += `DATUM: ${datumNL}\n`;
+    txtInhoud += `AANTAL: ${meldingen.length}\n`;
+    txtInhoud += `========================================\n\n`;
 
-  html += '</body></html>';
-  const w = window.open('', '_blank');
-  w.document.write(html);
-  w.document.close();
-  w.onload = () => setTimeout(() => w.print(), 500);
-}
+    meldingen.forEach((m, i) => {
+      const d = new Date(m.timestamp);
+      const tijd = d.toLocaleTimeString('nl-BE', { hour: '2-digit', minute: '2-digit' });
+      txtInhoud += `MELDING_START\n`;
+      txtInhoud += `ID: ${m.id}\n`;
+      txtInhoud += `TIMESTAMP: ${m.timestamp}\n`;
+      txtInhoud += `OPERATOR: ${m.operator}\n`;
+      txtInhoud += `LIJN: ${m.lijn}\n`;
+      txtInhoud += `OORSPRONG: ${m.oorsprong || ''}\n`;
+      txtInhoud += `CNT: ${m.cnt || ''}\n`;
+      txtInhoud += `TYPE: ${m.type}\n`;
+      txtInhoud += `OMSCHRIJVING: ${m.omschrijving}\n`;
+      txtInhoud += `FOTO: ${m.foto || 'geen'}\n`;
+      txtInhoud += `MELDING_EINDE\n\n`;
+    });
 
-// --- CSV ---
-function exportCSV() {
-  if (!gefilterd.length) return;
-  const h = ['Datum','Tijd','Operator','Oorsprong','CNT','Lijn','Type','Omschrijving','Heeft foto'];
-  const rows = gefilterd.map(m => {
-    const d = new Date(m.timestamp);
-    return [d.toLocaleDateString('nl-BE'), d.toLocaleTimeString('nl-BE',{hour:'2-digit',minute:'2-digit'}),
-      m.operator, m.oorsprong, m.cnt||'', m.lijn, m.type,
-      `"${(m.omschrijving||'').replace(/"/g,'""')}"`, m.heeftFoto?'Ja':'Nee'].join(';');
-  });
-  const csv = [h.join(';'),...rows].join('\n');
-  const blob = new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href=url; a.download=`robotlijn_${new Date().toISOString().slice(0,10)}.csv`; a.click();
-  URL.revokeObjectURL(url);
-}
+    const txtBestandsnaam = bestandsnaam.replace('.json', '.txt');
+    const blob = new Blob([txtInhoud], { type: 'text/plain' });
+    const file = new File([blob], txtBestandsnaam, { type: 'text/plain' });
 
-// --- Tab ---
-function switchTab(t) {
-  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
-  document.querySelectorAll('.tc').forEach(x=>x.classList.remove('active'));
-  document.querySelector(`[onclick="switchTab('${t}')"]`).classList.add('active');
-  document.getElementById(`tc-${t}`).classList.add('active');
-  if (t==='meldingen') laadMeldingen();
-}
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'Robotlijn meldingen', text: tekst, files: [file] });
+        showToast('Gedeeld!');
+        verwijderNaVersturen();
+        return;
+      } catch (err) {
+        if (err.name === 'AbortError') return;
+      }
+    }
+    // Fallback: downloaden
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = txtBestandsnaam; a.click();
+    URL.revokeObjectURL(url);
+    showToast('Bestand gedownload');
+    verwijderNaVersturen();
+  }
 
-// --- Toast ---
-function toast(msg, cls='') {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.className = 'toast' + (cls?' '+cls:'');
-  t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 3000);
-}
+  // --- Verwijder na versturen ---
+  function verwijderNaVersturen() {
+    localStorage.removeItem('rl_meldingen');
+    updateBadge();
+    renderMeldingen();
+  }
 
-// --- Init ---
-function setDefaultDatum() {
-  const nu = new Date();
-  const dag = nu.getDay(); // 0=zo, 1=ma...
-  const maandag = new Date(nu);
-  maandag.setDate(nu.getDate() - (dag === 0 ? 6 : dag - 1));
-  const zondag = new Date(maandag);
-  zondag.setDate(maandag.getDate() + 6);
-  const fmt = d => d.toISOString().slice(0,10);
-  document.getElementById('fdvan').value = fmt(maandag);
-  document.getElementById('fdtot').value = fmt(zondag);
-}
-checkServer();
-setDefaultDatum();
-setInterval(checkServer, 30000);
+  // --- Verwijder alles ---
+  function verwijderVerstuurde() {
+    localStorage.removeItem('rl_meldingen');
+    updateBadge();
+    renderMeldingen();
+    showToast('✓ Meldingen verwijderd');
+  }
+
+  // --- Foto modal ---
+  function openModal(id) {
+    const meldingen = JSON.parse(localStorage.getItem('rl_meldingen') || '[]');
+    const m = meldingen.find(x => x.id === id);
+    if (!m || !m.foto) return;
+    document.getElementById('fotoModalImg').src = m.foto;
+    document.getElementById('fotoModal').classList.add('open');
+  }
+
+  function sluitModal() {
+    document.getElementById('fotoModal').classList.remove('open');
+  }
+
+  // --- Toast ---
+  function showToast(msg, isError = false) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.className = 'toast' + (isError ? ' error' : '');
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3000);
+  }
+
+  // --- Init ---
+  loadPersistent();
 </script>
 </body>
 </html>
