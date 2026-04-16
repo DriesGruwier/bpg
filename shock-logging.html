@@ -380,6 +380,7 @@
     Robotlijn Melding
   </h1>
   <div class="badge-count" id="badgeCount" style="display:none">0</div>
+  <button onclick="wisselTaal()" id="taalBtn" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:6px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;padding:6px 10px;cursor:pointer;white-space:nowrap">NL</button>
 </header>
 
 <div class="tabs">
@@ -391,47 +392,38 @@
 <div class="tab-content active" id="tab-nieuw">
 <div class="form-wrapper">
 
-  <div class="section-label">Operator</div>
+  <div class="section-label" id="lblProbleem2">Operator</div>
 
   <div class="field">
-    <label>Naam <span class="persistent-badge">↺ onthouden</span></label>
+    <label id="lblOperator">Naam <span class="persistent-badge">↺ onthouden</span></label>
     <input type="text" id="operator" placeholder="Voornaam Achternaam" autocomplete="off">
   </div>
 
   <div class="field">
-    <label>Lijn / Zone <span class="persistent-badge">↺ onthouden</span></label>
-    <input type="text" id="lijn" value="Robot dozenlijn" autocomplete="off">
+    <label id="lblLijn">Lijn / Zone <span class="persistent-badge" id="lblOnthouden2">↺ onthouden</span></label>
+    <select id="lijnSelect" onchange="onLijnChange()" style="width:100%;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:'Barlow',sans-serif;font-size:16px;padding:13px 14px;outline:none;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:38px;margin-bottom:8px"></select>
+    <input type="text" id="lijn" placeholder="Manuele invoer..." autocomplete="off" style="display:none">
   </div>
 
   <div class="field">
-    <label>Oorsprong</label>
+    <label id="lblOorsprong">Oorsprong</label>
     <select id="oorsprong" style="width:100%;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:'Barlow',sans-serif;font-size:16px;padding:13px 14px;outline:none;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:38px;">
-      <option value="">-- Kies oorsprong --</option>
-      <option value="Westvlees">Westvlees</option>
-      <option value="Covameat">Covameat</option>
-      <option value="Lovenfosse">Lovenfosse</option>
-      <option value="Comeco">Comeco</option>
-      <option value="Van Bogaert">Van Bogaert</option>
-      <option value="Locks">Locks</option>
     </select>
   </div>
 
   <div class="field">
-    <label>CNT Nummer <span style="color:var(--text-muted);font-size:10px;font-weight:400;text-transform:none;letter-spacing:0">(optioneel)</span></label>
+    <label id="lblCnt">CNT Nummer <span style="color:var(--text-muted);font-size:10px;font-weight:400;text-transform:none;letter-spacing:0">(optioneel)</span></label>
     <div style="display:flex;gap:8px;align-items:stretch">
       <input type="text" id="cnt" placeholder="bv. (91)0004044280" autocomplete="off" style="flex:1">
       <button type="button" onclick="openScanner()" style="background:var(--accent);border:none;border-radius:var(--radius);color:#000;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;letter-spacing:1px;text-transform:uppercase;padding:0 14px;cursor:pointer;flex-shrink:0;white-space:nowrap">SCAN</button>
     </div>
   </div>
 
-  <div class="section-label">Probleem</div>
+  <div class="section-label" id="lblProbleem">Probleem</div>
 
   <div class="field">
-    <label>Type probleem <span class="persistent-badge">↺ onthouden</span></label>
-    <div class="type-grid">
-      <button class="type-btn" data-type="Open dozen" onclick="selectType(this)">📦 Open dozen</button>
-      <button class="type-btn" data-type="Label" onclick="selectType(this)">🏷️ Label</button>
-    </div>
+    <label id="lblType">Type probleem <span class="persistent-badge">↺ onthouden</span></label>
+    <div class="type-grid" id="typeGrid"></div>
     <div class="custom-type-wrapper">
       <input type="text" id="customTypeInput" placeholder="Ander type toevoegen...">
       <button class="add-custom-btn" onclick="addCustomType()">+</button>
@@ -441,7 +433,7 @@
   </div>
 
   <div class="field">
-    <label>Omschrijving</label>
+    <label id="lblOmschrijving">Omschrijving</label>
     <textarea id="omschrijving" placeholder="Beschrijf het probleem zo duidelijk mogelijk..."></textarea>
   </div>
 
@@ -497,8 +489,117 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  // --- Config ---
+  // ============================================================
+  // CONFIGURATIE — pas hier aan zonder verdere code te wijzigen
+  // ============================================================
   const WHATSAPP_NUMMER = "32494708560";
+
+  const CONFIG = {
+    // Taal: 'nl' of 'en'
+    defaultTaal: 'nl',
+
+    // Lijn/zone opties (laatste = manuele invoer)
+    lijnen: [
+      'Doosstapellijn',
+      'Plaatvries',
+      'Kaai',
+    ],
+
+    // Oorsprong opties
+    oorsprongen: [
+      'Westvlees',
+      'Covameat',
+      'Lovenfosse',
+      'Comeco',
+      'Van Bogaert',
+      'Locks',
+    ],
+
+    // Type probleem opties (vaste knoppen, max 4)
+    types: [
+      'Open dozen',
+      'Label',
+    ],
+  };
+
+  // Vertalingen
+  const TEKST = {
+    nl: {
+      titel: 'Robotlijn Melding',
+      subtitel: 'Belgian Pork Group',
+      tabNieuw: '➕ Nieuw',
+      tabMeldingen: '📋 Meldingen',
+      operator: 'Naam',
+      lijn: 'Lijn / Zone',
+      lijnManueel: 'Andere (manueel invullen)',
+      oorsprong: 'Oorsprong',
+      cnt: 'CNT Nummer',
+      cntPlaceholder: 'bv. (91)0004044280',
+      cntOptioneel: '(optioneel)',
+      probleem: 'Probleem',
+      type: 'Type probleem',
+      typeAnder: 'Ander type toevoegen...',
+      omschrijving: 'Omschrijving',
+      omschrijvingPlaceholder: 'Beschrijf het probleem zo duidelijk mogelijk...',
+      foto: 'Foto',
+      fotoTip: 'Tik om foto te nemen',
+      opslaan: 'Melding Opslaan',
+      versturen: 'Delen (WhatsApp / Mail / ...)',
+      verwijderen: '🗑️ Verwijder alle meldingen',
+      verstuurNaar: 'Versturen naar Dries',
+      geenMeldingen: 'Geen openstaande meldingen',
+      onthouden: '↺ onthouden',
+      scan: 'SCAN',
+      scanTitel: 'SCAN CNT',
+      scanTip: 'Richt op de barcode...',
+      foutNaam: 'Vul je naam in',
+      foutLijn: 'Vul de lijn/zone in',
+      foutOorsprong: 'Kies een oorsprong',
+      foutType: 'Kies een type probleem',
+      foutOmschrijving: 'Vul een omschrijving in',
+      opgeslagen: '✓ Melding opgeslagen!',
+      gedeeld: 'Gedeeld!',
+      gedownload: 'Bestand gedownload',
+    },
+    en: {
+      titel: 'Robot Line Report',
+      subtitel: 'Belgian Pork Group',
+      tabNieuw: '➕ New',
+      tabMeldingen: '📋 Reports',
+      operator: 'Name',
+      lijn: 'Line / Zone',
+      lijnManueel: 'Other (enter manually)',
+      oorsprong: 'Origin',
+      cnt: 'CNT Number',
+      cntPlaceholder: 'e.g. (91)0004044280',
+      cntOptioneel: '(optional)',
+      probleem: 'Problem',
+      type: 'Problem type',
+      typeAnder: 'Add other type...',
+      omschrijving: 'Description',
+      omschrijvingPlaceholder: 'Describe the problem as clearly as possible...',
+      foto: 'Photo',
+      fotoTip: 'Tap to take photo',
+      opslaan: 'Save Report',
+      versturen: 'Share (WhatsApp / Mail / ...)',
+      verwijderen: '🗑️ Delete all reports',
+      verstuurNaar: 'Send to Dries',
+      geenMeldingen: 'No pending reports',
+      onthouden: '↺ remembered',
+      scan: 'SCAN',
+      scanTitel: 'SCAN CNT',
+      scanTip: 'Point at the barcode...',
+      foutNaam: 'Enter your name',
+      foutLijn: 'Enter the line/zone',
+      foutOorsprong: 'Choose an origin',
+      foutType: 'Choose a problem type',
+      foutOmschrijving: 'Enter a description',
+      opgeslagen: '✓ Report saved!',
+      gedeeld: 'Shared!',
+      gedownload: 'File downloaded',
+    }
+  };
+  // ============================================================
 
   // --- State ---
   let fotoBase64 = null;
@@ -518,7 +619,18 @@
   function loadPersistent() {
     const saved = JSON.parse(localStorage.getItem('rl_persistent') || '{}');
     if (saved.operator) document.getElementById('operator').value = saved.operator;
-    if (saved.lijn) document.getElementById('lijn').value = saved.lijn;
+    if (saved.lijn) {
+      const sel = document.getElementById('lijnSelect');
+      const opt = Array.from(sel.options).find(o => o.value === saved.lijn);
+      if (opt) {
+        sel.value = saved.lijn;
+        document.getElementById('lijn').value = saved.lijn;
+      } else if (saved.lijn) {
+        sel.value = '__manueel__';
+        document.getElementById('lijn').style.display = 'block';
+        document.getElementById('lijn').value = saved.lijn;
+      }
+    }
     if (saved.customTypes) { customTypes = saved.customTypes; renderCustomTags(); }
     if (saved.selectedType) {
       setTimeout(() => {
@@ -537,7 +649,7 @@
   function savePersistent() {
     localStorage.setItem('rl_persistent', JSON.stringify({
       operator: document.getElementById('operator').value,
-      lijn: document.getElementById('lijn').value,
+      lijn: document.getElementById('lijnSelect').value !== '__manueel__' ? document.getElementById('lijnSelect').value : document.getElementById('lijn').value,
       selectedType: selectedTypeValue,
       customTypes
     }));
@@ -661,7 +773,10 @@
   // --- Opslaan ---
   function slaOpMelding() {
     const operator = document.getElementById('operator').value.trim();
-    const lijn = document.getElementById('lijn').value.trim();
+    const lijnSel = document.getElementById('lijnSelect').value;
+    const lijn = lijnSel === '__manueel__' || lijnSel === '' 
+      ? document.getElementById('lijn').value.trim() 
+      : lijnSel;
     const oorsprong = document.getElementById('oorsprong').value;
     const cnt = document.getElementById('cnt').value.trim();
     const type = selectedTypeValue;
@@ -968,8 +1083,102 @@
     if (video) video.srcObject = null;
   }
 
+  // --- Taal ---
+  let huidigeTaal = localStorage.getItem('rl_taal') || CONFIG.defaultTaal;
+
+  function wisselTaal() {
+    huidigeTaal = huidigeTaal === 'nl' ? 'en' : 'nl';
+    localStorage.setItem('rl_taal', huidigeTaal);
+    pasUiAan();
+  }
+
+  function pasUiAan() {
+    const t = TEKST[huidigeTaal];
+    document.getElementById('taalBtn').textContent = huidigeTaal.toUpperCase() === 'NL' ? 'EN' : 'NL';
+    document.title = t.titel;
+    // Header
+    document.querySelector('header h1').innerHTML = `<span>${t.subtitel}</span>${t.titel}`;
+    // Tabs
+    document.querySelector('[onclick="switchTab('nieuw')"]').textContent = t.tabNieuw;
+    document.querySelector('[onclick="switchTab('meldingen')"]').textContent = t.tabMeldingen;
+    // Labels
+    const lbls = {
+      'lblOperator': t.operator, 'lblLijn': t.lijn,
+      'lblOorsprong': t.oorsprong, 'lblCnt': t.cnt,
+      'lblProbleem': t.probleem, 'lblType': t.type,
+      'lblOmschrijving': t.omschrijving, 'lblFoto': t.foto
+    };
+    Object.entries(lbls).forEach(([id, val]) => {
+      const el = document.getElementById(id);
+      if (el) {
+        const badge = el.querySelector('.persistent-badge');
+        el.textContent = val + ' ';
+        if (badge) el.appendChild(badge);
+      }
+    });
+    // Placeholders
+    document.getElementById('omschrijving').placeholder = t.omschrijvingPlaceholder;
+    document.getElementById('cnt').placeholder = t.cntPlaceholder;
+    // Knoppen
+    document.querySelector('.save-btn').textContent = t.opslaan;
+    const whatsappBtn = document.querySelector('.whatsapp-btn');
+    if (whatsappBtn) whatsappBtn.textContent = t.versturen;
+    // Verstuur titel
+    const vtitel = document.querySelector('.verstuur-titel');
+    if (vtitel) vtitel.textContent = '📤 ' + t.verstuurNaar;
+    // Foto placeholder
+    const fotoSpan = document.querySelector('.foto-placeholder span');
+    if (fotoSpan) fotoSpan.textContent = t.fotoTip;
+    // Lijn dropdown
+    vulLijnDropdown();
+    // Oorsprong dropdown
+    vulOorsprongDropdown();
+    // Type knoppen
+    vulTypeGrid();
+  }
+
+  function vulLijnDropdown() {
+    const t = TEKST[huidigeTaal];
+    const sel = document.getElementById('lijnSelect');
+    const huidige = sel.value;
+    sel.innerHTML = `<option value="">-- ${t.lijn} --</option>` +
+      CONFIG.lijnen.map(l => `<option value="${l}">${l}</option>`).join('') +
+      `<option value="__manueel__">${t.lijnManueel}</option>`;
+    if (huidige) sel.value = huidige;
+  }
+
+  function vulOorsprongDropdown() {
+    const sel = document.getElementById('oorsprong');
+    const huidige = sel.value;
+    sel.innerHTML = `<option value="">-- ${TEKST[huidigeTaal].oorsprong} --</option>` +
+      CONFIG.oorsprongen.map(o => `<option value="${o}">${o}</option>`).join('');
+    if (huidige) sel.value = huidige;
+  }
+
+  function vulTypeGrid() {
+    const grid = document.getElementById('typeGrid');
+    grid.innerHTML = CONFIG.types.map(t =>
+      `<button class="type-btn ${selectedTypeValue === t ? 'active' : ''}" data-type="${t}" onclick="selectType(this)">${t}</button>`
+    ).join('');
+  }
+
+  function onLijnChange() {
+    const sel = document.getElementById('lijnSelect');
+    const input = document.getElementById('lijn');
+    if (sel.value === '__manueel__') {
+      input.style.display = 'block';
+      input.focus();
+      input.value = '';
+    } else {
+      input.style.display = 'none';
+      input.value = sel.value;
+    }
+    savePersistent();
+  }
+
   // --- Init ---
   loadPersistent();
+  pasUiAan();
 </script>
 </body>
 </html>
