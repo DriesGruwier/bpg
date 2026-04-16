@@ -614,6 +614,8 @@
     const type = selectedTypeValue;
     const omschrijving = document.getElementById('omschrijving').value.trim();
 
+    showToast('Debug: op=' + (operator||'LEEG') + ' type=' + (type||'LEEG') + ' foto=' + (fotoBase64 ? 'ja' : 'nee'));
+
     if (!operator) { showToast('Vul je naam in', true); return; }
     if (!lijn) { showToast('Vul de lijn/zone in', true); return; }
     if (!type) { showToast('Kies een type probleem', true); return; }
