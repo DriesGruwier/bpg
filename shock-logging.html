@@ -579,17 +579,47 @@
     const file = event.target.files[0];
     if (!file) return;
     if (!file.type.startsWith('image/')) { showToast('Alleen afbeeldingen toegestaan', true); return; }
-    if (file.size > 8 * 1024 * 1024) { showToast('Foto te groot (max 8MB)', true); return; }
-    const reader = new FileReader();
-    reader.onload = e => {
-      fotoBase64 = e.target.result;
+    showToast('Foto verwerken...');
+    comprimeerFoto(file, 1200, 0.75).then(base64 => {
+      fotoBase64 = base64;
       const area = document.getElementById('fotoArea');
       area.classList.add('has-photo');
       area.innerHTML = `
         <img src="${fotoBase64}" alt="Foto">
         <button class="foto-remove" onclick="removeFoto(event)">×</button>`;
-    };
-    reader.readAsDataURL(file);
+      showToast('Foto geladen!');
+    }).catch(err => {
+      showToast('Fout foto: ' + err.message, true);
+    });
+  }
+
+  function comprimeerFoto(file, maxBreedte, kwaliteit) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = new Image();
+        img.onload = () => {
+          // Bereken nieuwe afmetingen
+          let breedte = img.width;
+          let hoogte = img.height;
+          if (breedte > maxBreedte) {
+            hoogte = Math.round(hoogte * maxBreedte / breedte);
+            breedte = maxBreedte;
+          }
+          // Teken op canvas
+          const canvas = document.createElement('canvas');
+          canvas.width = breedte;
+          canvas.height = hoogte;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, breedte, hoogte);
+          resolve(canvas.toDataURL('image/jpeg', kwaliteit));
+        };
+        img.onerror = () => reject(new Error('Afbeelding laden mislukt'));
+        img.src = e.target.result;
+      };
+      reader.onerror = () => reject(new Error('Bestand lezen mislukt'));
+      reader.readAsDataURL(file);
+    });
   }
 
   function removeFoto(e) {
