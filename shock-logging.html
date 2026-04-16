@@ -713,7 +713,7 @@
 
     const operator = meldingen[0].operator.replace(/\s+/g, '_');
     const datum = new Date().toISOString().slice(0, 10);
-    const bestandsnaam = `meldingen_${operator}_${datum}.json`;
+    const bestandsnaam = `meldingen_${operator}_${datum}_${Date.now()}.json`;
 
     const blob = new Blob([JSON.stringify({ meldingen, geexporteerd: new Date().toISOString() }, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -730,7 +730,7 @@
 
     const operator = meldingen[0].operator.replace(/\s+/g, '_');
     const datum = new Date().toISOString().slice(0, 10);
-    const bestandsnaam = `meldingen_${operator}_${datum}.json`;
+    const bestandsnaam = `meldingen_${operator}_${datum}_${Date.now()}.json`;
 
     // Bouw tekst overzicht
     const opNaam = meldingen[0].operator;
@@ -750,25 +750,36 @@
     const blob = new Blob([JSON.stringify({ meldingen, geexporteerd: new Date().toISOString() }, null, 2)], { type: 'application/json' });
     const file = new File([blob], bestandsnaam, { type: 'application/json' });
 
-    if (navigator.share && navigator.canShare({ files: [file] })) {
+    if (navigator.share) {
       try {
         await navigator.share({ title: 'Robotlijn meldingen', text: tekst, files: [file] });
         showToast('Gedeeld!');
+        return;
       } catch (err) {
-        if (err.name !== 'AbortError') {
-          downloadJSON();
-          showToast('Bestand gedownload');
-        }
+        if (err.name === 'AbortError') return;
+        // share met bestand mislukt, probeer zonder bestand
+        try {
+          await navigator.share({ title: 'Robotlijn meldingen', text: tekst });
+          // download bestand apart
+          const url2 = URL.createObjectURL(blob);
+          const a2 = document.createElement('a');
+          a2.href = url2; a2.download = bestandsnaam; a2.click();
+          URL.revokeObjectURL(url2);
+          showToast('Gedeeld + bestand gedownload');
+          return;
+        } catch(err2) { /* fall through */ }
       }
-    } else {
-      downloadJSON();
-      showToast('Bestand gedownload');
     }
+    // Fallback: gewoon downloaden
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = bestandsnaam; a.click();
+    URL.revokeObjectURL(url);
+    showToast('Bestand gedownload');
   }
 
   // --- Verwijder alles ---
   function verwijderVerstuurde() {
-    if (!confirm('Alle meldingen verwijderen?')) return;
     localStorage.removeItem('rl_meldingen');
     updateBadge();
     renderMeldingen();
