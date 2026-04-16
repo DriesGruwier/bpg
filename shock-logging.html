@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0a0a0a">
-<title>Robotlijn Melding</title>
+<title>Locks Reporter</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -376,8 +376,8 @@
     </svg>
   </div>
   <h1>
-    <span>Belgian Pork Group</span>
-    Robotlijn Melding
+    <span>Locks</span>
+    Locks Reporter
   </h1>
   <div class="badge-count" id="badgeCount" style="display:none">0</div>
   <button onclick="wisselTaal()" id="taalBtn" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:6px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;padding:6px 10px;cursor:pointer;white-space:nowrap">NL</button>
@@ -528,8 +528,8 @@
   // Vertalingen
   const TEKST = {
     nl: {
-      titel: 'Robotlijn Melding',
-      subtitel: 'Belgian Pork Group',
+      titel: 'Locks Reporter',
+      subtitel: 'Locks',
       tabNieuw: '➕ Nieuw',
       tabMeldingen: '📋 Meldingen',
       operator: 'Naam',
@@ -565,8 +565,8 @@
       gedownload: 'Bestand gedownload',
     },
     en: {
-      titel: 'Robot Line Report',
-      subtitel: 'Belgian Pork Group',
+      titel: 'Locks Reporter',
+      subtitel: 'Locks',
       tabNieuw: '➕ New',
       tabMeldingen: '📋 Reports',
       operator: 'Name',
@@ -912,7 +912,7 @@
     // Bouw tekst overzicht
     const opNaam = meldingen[0].operator;
     const datumNL = new Date().toLocaleDateString('nl-BE');
-    let tekst = `MELDINGEN ROBOTLIJN\n`;
+    let tekst = `LOCKS REPORTER\n`;
     tekst += `${opNaam} - ${datumNL}\n`;
     tekst += `${meldingen.length} melding(en)\n\n`;
     meldingen.forEach((m, i) => {
@@ -954,7 +954,7 @@
 
     if (navigator.share) {
       try {
-        await navigator.share({ title: 'Robotlijn meldingen', text: tekst, files: [file] });
+        await navigator.share({ title: 'Locks Reporter', text: tekst, files: [file] });
         showToast('Gedeeld!');
         verwijderNaVersturen();
         return;
