@@ -747,8 +747,31 @@
       tekst += `\n`;
     });
 
-    const blob = new Blob([JSON.stringify({ meldingen, geexporteerd: new Date().toISOString() }, null, 2)], { type: 'application/json' });
-    const file = new File([blob], bestandsnaam, { type: 'application/json' });
+    // Bouw TXT inhoud
+    let txtInhoud = `ROBOTLIJN MELDINGEN\n`;
+    txtInhoud += `GEEXPORTEERD: ${new Date().toISOString()}\n`;
+    txtInhoud += `OPERATOR: ${opNaam}\n`;
+    txtInhoud += `DATUM: ${datumNL}\n`;
+    txtInhoud += `AANTAL: ${meldingen.length}\n`;
+    txtInhoud += `========================================\n\n`;
+
+    meldingen.forEach((m, i) => {
+      const d = new Date(m.timestamp);
+      const tijd = d.toLocaleTimeString('nl-BE', { hour: '2-digit', minute: '2-digit' });
+      txtInhoud += `MELDING_START\n`;
+      txtInhoud += `ID: ${m.id}\n`;
+      txtInhoud += `TIMESTAMP: ${m.timestamp}\n`;
+      txtInhoud += `OPERATOR: ${m.operator}\n`;
+      txtInhoud += `LIJN: ${m.lijn}\n`;
+      txtInhoud += `TYPE: ${m.type}\n`;
+      txtInhoud += `OMSCHRIJVING: ${m.omschrijving}\n`;
+      txtInhoud += `FOTO: ${m.foto || 'geen'}\n`;
+      txtInhoud += `MELDING_EINDE\n\n`;
+    });
+
+    const txtBestandsnaam = bestandsnaam.replace('.json', '.txt');
+    const blob = new Blob([txtInhoud], { type: 'text/plain' });
+    const file = new File([blob], txtBestandsnaam, { type: 'text/plain' });
 
     if (navigator.share) {
       try {
@@ -757,23 +780,12 @@
         return;
       } catch (err) {
         if (err.name === 'AbortError') return;
-        // share met bestand mislukt, probeer zonder bestand
-        try {
-          await navigator.share({ title: 'Robotlijn meldingen', text: tekst });
-          // download bestand apart
-          const url2 = URL.createObjectURL(blob);
-          const a2 = document.createElement('a');
-          a2.href = url2; a2.download = bestandsnaam; a2.click();
-          URL.revokeObjectURL(url2);
-          showToast('Gedeeld + bestand gedownload');
-          return;
-        } catch(err2) { /* fall through */ }
       }
     }
-    // Fallback: gewoon downloaden
+    // Fallback: downloaden
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url; a.download = bestandsnaam; a.click();
+    a.href = url; a.download = txtBestandsnaam; a.click();
     URL.revokeObjectURL(url);
     showToast('Bestand gedownload');
   }
